@@ -11,15 +11,21 @@ namespace Poc_Redis_Docker
         {
             var endpoint = RedisConexao.Connection.GetEndPoints();
             var server = RedisConexao.Connection.GetServer(endpoint[0]);
-
             /*foreach (var key in server.Keys(pattern: mascara+"*"))
             {
                 Console.WriteLine(key);
             }*/
 
-            var chaves = server.Keys(pattern: mascara + "*");
+            var chaves = server.Keys(database: 0, pattern: mascara + "*");
             return chaves;
         }
+
+        public bool ExcluiChave(string key)
+        {
+            var cache = RedisConexao.Connection.GetDatabase();
+            return cache.KeyDelete(key);
+        }
+
 
     }
 }

@@ -112,11 +112,13 @@ namespace Poc_Redis_Docker
             //Metodos Utilizando o tipo string
             var tipoString = new TipoString();
 
-            //Gravação de dados string
-            Console.WriteLine("Salvando dados no cache:");
+            //Gravação de dado string
+            Console.WriteLine("Salvando dado no cache:");
+            var agenciaRand = random.Next(agenciaL.Count);
+            var agenciaReg = agenciaL3[agenciaRand];
             stopwatch0.Start();
             //GravaDado
-            //tipoString.GravaDado(agenciaL);
+            tipoString.GravaDado(agenciaReg);
             stopwatch0.Stop();
             Console.WriteLine("Sucesso.");
 
@@ -149,27 +151,61 @@ namespace Poc_Redis_Docker
             var mascara = "AG:";
             var chaves = tipoKey.ListaChave(mascara);
 
-            //Leitura de dados string
-            Console.WriteLine("Lendo dados do cache:");
+
+            //Leitura de dados lista
+            //Não consegui transformar o IEnumarable<RedisKey> em RedisKey[] para leitura de multiplos registros
+            //Mas o metodo tipoString.LeituraDadosLista(RedisKey[]) está implementado
+
+            /*Console.WriteLine("Lendo dados do cache, lista:");
             stopwatch1.Start();
+            List<Agencia> agenciaRetornodb = new List<Agencia>();
+            List<String> listaChaves = new List<string>();
+            foreach (var chave in chaves)
+            {
+                listaChaves.Add(chave.ToString());
+            }
+            RedisKey[] chaveArray = listaChaves.Select(value => (RedisValue)serializer.Serialize(value)).ToArray();
+            agenciaRetornodb = tipoString.LeituraDadosLista(RedisKey);
+
             foreach (var chave in chaves)
             {
                 //var dados = tipoString.LeituraDados(chave);
                 //Console.WriteLine("key = {3}, agencia = {0}, grupo = {1}, evento = {2}", dados.agencia, dados.grupo, dados.evento, dados.chave_cache);
             }
             stopwatch1.Stop();
+            */
 
             //Leitura de um valor
             Console.WriteLine("Lendo 1 registro do cache:");
-            var indice_rnd = random.Next(agencias.Count);
-            var agencia1 = agenciaL3[indice_rnd];
+            var indice_rnd = random.Next(agenciaL3.Count);
+            var agenciaLD = agenciaL3[indice_rnd];
             stopwatch2.Start();
-            var valorString = tipoString.LeituraDados(agencia1.chave_cache.ToString());
+            var valorString = tipoString.LeituraDados(agenciaLD.chave_cache.ToString());
             stopwatch2.Stop();
             Console.WriteLine("key = {3}, agencia = {0}, grupo = {1}, evento = {2}", valorString.agencia, valorString.grupo, valorString.evento, valorString.chave_cache);
-            Console.WriteLine("Excluido registro {0} do cache:", agencia1.chave_cache);
-            var exclui = tipoString.ExcluiDado(agencia1.chave_cache.ToString());
+            
+            
+            //Exlcusão de uma valor
+            Console.WriteLine("Excluido registro {0} do cache:", agenciaLD.chave_cache);
+            var exclui = tipoKey.ExcluiChave(agenciaLD.chave_cache.ToString());
             Console.WriteLine(exclui);
+
+            //Atualização de um valor
+            Console.WriteLine("Atualizando 1 registro do cache:");
+            indice_rnd = random.Next(agenciaL3.Count);
+            var agenciaAtlz = agenciaL3[indice_rnd];
+            var valorStringAtlz = tipoString.LeituraDados(agenciaAtlz.chave_cache.ToString());
+            Console.WriteLine("key = {3}, agencia = {0}, grupo = {1}, evento = {2}", valorStringAtlz.agencia, valorStringAtlz.grupo, valorStringAtlz.evento, valorStringAtlz.chave_cache);
+            Console.WriteLine("Atualizando registro {0} do cache:", valorStringAtlz.chave_cache);
+
+            agenciaAtlz.agencia = "XXXX";
+            agenciaAtlz.grupo = "X";
+            agenciaAtlz.evento = "Teste Atualizacao";
+
+            tipoString.GravaDado(agenciaAtlz);
+            valorStringAtlz = tipoString.LeituraDados(agenciaAtlz.chave_cache.ToString());
+            Console.WriteLine("key = {3}, agencia = {0}, grupo = {1}, evento = {2}", valorStringAtlz.agencia, valorStringAtlz.grupo, valorStringAtlz.evento, valorStringAtlz.chave_cache);
+
             /*
             //Metodos utilizando o tipo hash
             var tipoHashSet = new TipoHashSet();
@@ -217,7 +253,7 @@ namespace Poc_Redis_Docker
             //Console.WriteLine("Leitura coluna: "+stopwatch1.ElapsedMilliseconds);
             //Console.WriteLine("Leitura completa: "+stopwatch2.ElapsedMilliseconds);
 
-            Console.WriteLine("\nGravação varios registros: " + stopwatch0.ElapsedMilliseconds);
+            Console.WriteLine("\nGravação um registro no cache: " + stopwatch0.ElapsedMilliseconds);
             Console.WriteLine("Gravação varios registros, batch: " + stopwatch4.ElapsedMilliseconds);
             Console.WriteLine("Gravação varios registros, batch async: " + stopwatch5.ElapsedMilliseconds);
             Console.WriteLine("Leitura varios registros: " + stopwatch1.ElapsedMilliseconds);

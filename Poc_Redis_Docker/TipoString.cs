@@ -10,15 +10,12 @@ namespace Poc_Redis_Docker
 {
     class TipoString
     {
-        public void GravaDado(List<Agencia> agenciaLista)
+        public void GravaDado(Agencia agencia)
         {
             var cache = RedisConexao.Connection.GetDatabase();
-            foreach (var agencia in agenciaLista)
-            {
-                var key = agencia.chave_cache;
-                var value = JsonConvert.SerializeObject(agencia);
-                cache.StringSet(key, value);
-            }
+            var key = agencia.chave_cache;
+            var value = JsonConvert.SerializeObject(agencia);
+            cache.StringSet(key, value);
         }
 
         public void GravaDadoExpira(List<Agencia> agenciaLista, TimeSpan exipracao)
@@ -37,7 +34,7 @@ namespace Poc_Redis_Docker
             var cache = RedisConexao.Connection.GetDatabase();
             const int BatchSize = 100;
             var batch = new List<KeyValuePair<RedisKey, RedisValue>>(BatchSize);
-        
+            // Faz lote de 100 registros e manda para o banco inserir via MSET.
             foreach(var agencia in agenciaLista)
             {
                 var key = agencia.chave_cache;
@@ -47,10 +44,11 @@ namespace Poc_Redis_Docker
                 if (batch.Count == BatchSize)
                 {
                     cache.StringSet(batch.ToArray());
+                    //limpa o a batch para adicionar novos registros.
                     batch.Clear();
                 }
             }
-            if (batch.Count != 0) // batch final
+            if (batch.Count != 0) // batch final insere os registros restantes.
                 cache.StringSet(batch.ToArray());
 
             //Fonte: https://github.com/StackExchange/StackExchange.Redis/issues/1089
@@ -65,6 +63,7 @@ namespace Poc_Redis_Docker
 
             List<Task<bool>> listaTaskBool = new List<Task<bool>>();
 
+            // Faz lote de 100 registros e manda para o banco inserir via MSET.
             foreach (var agencia in agenciaLista)
             {
                 var key = agencia.chave_cache;
@@ -73,11 +72,13 @@ namespace Poc_Redis_Docker
 
                 if (batch.Count == BatchSize)
                 {
+                    //Adiciona o registro de forma assincrona
                     listaTaskBool.Add(cache.StringSetAsync(batch.ToArray()));
+                    //limpa o a batch para adicionar novos registros.
                     batch.Clear();
                 }
             }
-            if (batch.Count != 0) // batch final
+            if (batch.Count != 0) // batch final insere os registros restantes.
             {
                 listaTaskBool.Add(cache.StringSetAsync(batch.ToArray()));
             }
@@ -88,16 +89,22 @@ namespace Poc_Redis_Docker
         public Agencia LeituraDados(string key)
         {
             var cache = RedisConexao.Connection.GetDatabase();
+            //Busca chave e converte em objeto.
             return JsonConvert.DeserializeObject<Agencia>(cache.StringGet(key));
         }
 
-        public bool ExcluiDado(string key)
+        public List<Agencia> LeituraDadosLista(RedisKey[] keys)
         {
+            List<Agencia> agenciaL = new List<Agencia>();
             var cache = RedisConexao.Connection.GetDatabase();
-            return cache.KeyDelete(key);
+            //Busca chaves
+            var valores = cache.StringGet(keys);
+            foreach (var valor in valores)
+            {
+                agenciaL.Add(JsonConvert.DeserializeObject<Agencia>(valor));
+            }
+            return agenciaL;
         }
-
-
 
         /*
         public void GravaDadoAsyc(List<Agencia> agenciaLista)
