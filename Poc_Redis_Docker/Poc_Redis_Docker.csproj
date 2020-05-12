@@ -8,8 +8,8 @@
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     <PackageReference Include="ServiceStack.Redis" Version="5.8.0" />
-    <PackageReference Include="StackExchange.Redis" Version="2.1.28" />
-    <PackageReference Include="StackExchange.Redis.Extensions.Core" Version="5.5.0" />
+    <PackageReference Include="StackExchange.Redis" Version="2.1.30" />
+    <PackageReference Include="StackExchange.Redis.Extensions.Core" Version="6.1.6" />
   </ItemGroup>
 
 </Project>
